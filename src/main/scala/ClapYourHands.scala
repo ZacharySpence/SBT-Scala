@@ -1,3 +1,2 @@
-class ClapYourHands {
-  def Clap {}
+object ClapYourHands extends App {
 }
