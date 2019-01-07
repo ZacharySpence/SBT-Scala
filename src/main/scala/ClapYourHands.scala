@@ -81,7 +81,49 @@ object scalaNewbieProjects extends App{
   }
 
   //games
+  def blackjack(number1:Int,number2:Int):Int={
+    if ((number1 > number2 || number2 > 21)&& number1 <= 21 ){
+      return (number1)
+    }
+    else if ((number2 > number1 || number1 > 21) && number2 <= 21){
+      return (number2)
+    }
+    else{
+      return (0)
+    }
+  }
 
+  def uniqueSum(number1:Int,number2:Int,number3:Int):Int={
+    if (number1 == number2 && number2 == number3){
+      return (0)
+    }
+    else if (number1 == number2){
+      return(number3)
+    }
+    else if (number1 == number3){
+      return(number2)
+    }
+    else if (number2 == number3){
+      return(number1)
+    }
+    else{
+      return(number1+number2+number3)
+    }
+  }
+
+  def tooHot(number1:Int,TorF:Boolean):Boolean={
+    if (TorF) {
+      if (number1 >= 60 && number1 <= 100) {
+        return true
+      }
+    }
+    else{
+      if (number1 >= 60 && number1 <= 90){
+        return true
+      }
+    }
+    return false
+  }
 
 
   tryThemAllOut
