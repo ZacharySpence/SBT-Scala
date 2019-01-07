@@ -1,0 +1,3 @@
+class ClapYourHands {
+  def Clap {}
+}
