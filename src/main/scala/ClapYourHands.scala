@@ -115,6 +115,7 @@ object scalaNewbieProjects extends App{
   }
 
   def tooHot(number1:Int,torF:Boolean):Boolean= {
+
     if (torF) {
       if (number1 >= 60 && number1 <= 100) {
         true
