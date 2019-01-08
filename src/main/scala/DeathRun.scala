@@ -7,12 +7,13 @@ var overallDead = false
     return (roll+bonuses)
 
   }
-  def choices(Chara:Character, location:Tuple5[String,Int,Int,Int,Int], success:String = "somehow it worked"):String={
+  def choices(Chara:Character, location:Tuple6[String,Int,Int,Int,Int,String]):String={
     var Description = location._1
     var Difficulty = location._2
     var StrDC =  location._3
     var AgiDC =  location._4
     var SpeedDC =location._5
+    var success = location._6
 
 
     //player chooses 1 of 4 actions.
@@ -71,24 +72,24 @@ var overallDead = false
 }
 class Jungle{
   //var name = (Description,Difficulty, strengthDC,AgiDC,SpeedDC,deathbyFighting,deathbyDodging,deathbyRunning,deathbyCastingMagic)
-  var monkeyBusiness = ("Monkeys start pelting you with nuts and rocks. begone intruder!!",5,0,0,0)
-  var forestFire = ("the trees are set ablaze, whole canopies meteoring to the ground, blazing",7,100,100,-3)
-  var treantMeeting = ("Stumbling into an Entmoot, the tree shepherds demand retribution for interrupting their hellos!",8,2,-2,-4)
+  var monkeyBusiness = ("Monkeys start pelting you with nuts and rocks. begone intruder!!",5,0,0,0,"Screw those monkeys")
+  var forestFire = ("the trees are set ablaze, whole canopies meteoring to the ground, blazing",7,100,100,-3,"Almost got cooked there")
+  var treantMeeting = ("Stumbling into an Entmoot, the tree shepherds demand retribution for interrupting their hellos!",8,2,-2,-4,"Bad little orcsie got away he did")
 }
 class Volcano{
-  var eruption = ("The volcano erupts in a plume of molten lava. Run!!",10,100,4,-2)
-  var quake = ("The volcano quakes violently, cracks splitting the earth below your feet!",8,100,2,-1)
-  var salamanders = ("You've run into the population of fire salamanders, and are they angry!!",6,-1,2,3)
+  var eruption = ("The volcano erupts in a plume of molten lava. Run!!",10,100,4,-2,"Now all you need is some eagles to come pick you up")
+  var quake = ("The volcano quakes violently, cracks splitting the earth below your feet!",8,100,2,-1,"No journey to the centre of the earth for you today!")
+  var salamanders = ("You've run into the population of fire salamanders, and are they angry!!",6,-1,2,3,"They're pretty tasty")
 }
 class Beach{
-  var lobsterAttack = ("You've been attacked by were-lobsters!",8,1,0,-2)
-  var tsunami = ("A tsunami rises in the distance...",6,100,100,3)
-  var burningSand = ("The sand is so hot it burns!",3,100,0,0)
+  var lobsterAttack = ("You've been attacked by were-lobsters!",8,1,0,-2,"They're going to be more Were-y of you next time")
+  var tsunami = ("A tsunami rises in the distance...",6,100,100,3,"Tsunami, shoonami. you're fine")
+  var burningSand = ("The sand is so hot it burns!",3,100,0,0,"Almost reminds you of childhood")
 }
 class The_VoidZone{
-  var multidimensionalPortalHopping = ("You portal into a mesh of inter-spliced portals",0,100,100,100)
-  var theDarkness = ("utter darkness envelops you",9,0,100,100)
-  var voidwalkers = ("A dark blue ghost with thunder in its eyes wails your demise",7,1,100,-1)
+  var multidimensionalPortalHopping = ("You portal into a mesh of inter-spliced portals",0,100,100,100,"Thousands of hours of portal 2 has prepared you for this")
+  var theDarkness = ("utter darkness envelops you",9,0,100,100,"you were born in darkness, this is nothing")
+  var voidwalkers = ("A dark blue ghost with thunder in its eyes wails your demise",7,1,100,-1,"As a level 110 WOW warlock,voidWalkers are chow.")
   var VolcanoTeleportation = "You swim into a molten portal and land at a volcano"
   var JungleTeleportation = "You swing into a grassy portal and smack into a a jungle tree"
   var BeachTeleportation = "You dig through a sandy portal bursting out of the coastline"
@@ -164,22 +165,29 @@ object mainGame extends App{
           case 1 => println(deathRun.choices(Chara,location.Beach.lobsterAttack))
           case 2 => println(deathRun.choices(Chara,location.Beach.burningSand))
           case 3 => println(deathRun.choices(Chara,location.Beach.tsunami))
-          case _ => println("Errror")
-            deathRun.overallDead = true
+          case _ => println("You run into the jungle")
+            runSpot = "Jungle"
+            listSituation = List()
         }
         case "Volcano" => getAnInt(3) match{
           case 1 => println(deathRun.choices(Chara,location.Volcano.eruption))
           case 2 => println(deathRun.choices(Chara,location.Volcano.quake))
           case 3 => println(deathRun.choices(Chara,location.Volcano.salamanders))
-          case _ => println("Errore")
-            deathRun.overallDead = true
+          case _ => println("You run into the jungle")
+            runSpot = "Jungle"
+            listSituation = List()
         }
         case "Jungle" => getAnInt(3) match{
           case 1 => println(deathRun.choices(Chara,location.Jungle.forestFire))
           case 2 => println(deathRun.choices(Chara,location.Jungle.monkeyBusiness))
           case 3 => println(deathRun.choices(Chara,location.Jungle.treantMeeting))
-          case _ => println("Errrror")
-            deathRun.overallDead = true
+          case _ => randInt.nextInt(2)+1 match{
+            case 1 => println("You run onto a volcano")
+              runSpot = "Volcano"
+            case 2 => println("You run onto a beach")
+              runSpot = "Beach"
+          }
+            listSituation = List()
         }
         case "The VoidZone" => getAnInt(9) match{
           case 1|7 => println(deathRun.choices(Chara,location.The_VoidZone.multidimensionalPortalHopping))
@@ -219,8 +227,7 @@ object mainGame extends App{
       case "e"|"f" => end = false
       case _ => reset()
     }
-    println("You record for that run was: "+
-      currentRecord)
+    println(s"You record for that run was: $currentRecord encounters")
   }
 
 
