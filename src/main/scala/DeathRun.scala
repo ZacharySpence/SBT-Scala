@@ -69,6 +69,14 @@ var overallDead = false
       case _ => return "The VoidZone"
     }
   }
+
+  def blka(a: String) = {
+
+
+
+
+  }
+
 }
 class Jungle{
   //var name = (Description,Difficulty, strengthDC,AgiDC,SpeedDC,deathbyFighting,deathbyDodging,deathbyRunning,deathbyCastingMagic)
