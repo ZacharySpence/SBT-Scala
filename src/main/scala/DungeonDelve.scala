@@ -12,30 +12,32 @@ trait TheDoEverything extends Dice with Items{
   var Wisdom:Int  = 0
   var Charisma:Int  = 0
   var Defence:Int = 0
-  var combatTuple:Tuple4[String,Tuple3[Int,Int,String],Int,Int] = ("",(0,0,""),0,0)
-  var roomEncounter:List[Tuple2[List[String],Tuple2[String,Int]]] = List((List(),("",0)))
+  var combatTuple:Tuple3[String,Tuple3[Int,Int,String],Tuple7[Int,Int,Int,Int,Int,Int,Int]] = ("",(0,0,""),(0,0,0,0,0,0,0))
+  var roomEncounter:List[Tuple2[List[String],Tuple2[List[String],List[Int]]]] = List((List(),(List(),List())))
 
-  def Combat(playerNADH:Tuple4[String,Tuple3[Int,Int,String],Int,Int],enemyNADH:Tuple4[String,Tuple3[Int,Int,String],Int,Int])={
-    println(s"${playerNADH._1} is under attack by ${enemyNADH._1}\n")
+  def Combat(playerNAS:Tuple3[String,Tuple3[Int,Int,String],Tuple7[Int,Int,Int,Int,Int,Int,Int]],
+             enemyNAS:Tuple3[String,Tuple3[Int,Int,String],Tuple7[Int,Int,Int,Int,Int,Int,Int]])={
+    println(s"${playerNAS._1} is under attack by ${enemyNAS._1}\n")
     //1time instantiating variables
-    var ehealth = enemyNADH._4
-    var phealth = playerNADH._4
+    var ehealth = enemyNAS._3._3
+    var phealth = playerNAS._3._3
     var combat = true
     //Attack phase => +ve is player does damage, -ve is enemy damage
     //multi-instantiating variables
     while (combat){
-
-      var makeAttack = readLine(" ")
       println(s"Enemy HP: $ehealth, Your HP: $phealth")
+      var chooseOption = (readLine("[Attack,Run Away]").toLowerCase() + " ").substring(0,1)
+      chooseOption match {
+        case "a" => Attack()
+        case "r" => runAway()
+        case _ => println("You stand there like an idiot and do nothing")
+      }
+
       def checkAttack(pattack:Tuple3[Int,Int,String],eattack:Tuple3[Int,Int,String]):Int={
         var playerAttack = rollDice((pattack._1,pattack._2),weapons(pattack._3))
         var enemyAttack = rollDice((eattack._1,eattack._2),weapons(eattack._3))
         return (playerAttack-enemyAttack)
       }
-
-      //var pattack = rollDice((playerNADH._2._1,playerNADH._2._2),weapons(playerNADH._2._3))
-      //var eattack = rollDice((enemyNADH._2._1,enemyNADH._2._2),weapons(enemyNADH._2._3))
-      //var attack = pattack-eattack
 
       def checkDamage(attack:Int,edefence:Int,pdefence:Int):Tuple2[Boolean,Int]={
         var dmg = 0
@@ -78,15 +80,35 @@ trait TheDoEverything extends Dice with Items{
         }
       }
 
-      //Main Function Bit
-      var attack = checkAttack(playerNADH._2,enemyNADH._2)
-      var damage = checkDamage(attack,enemyNADH._3,playerNADH._3)
-      //Deal Damage
-      damage._1 match{
-        case true => ehealth -= damage._2
-        case false => phealth -= damage._2
+      def checkRun(pdex:Int,edex:Int):Boolean={
+        var run = rollDice((1,20),pdex) - rollDice((1,20),edex)
+        if (run <= 0){
+          return false
+        }
+        return true
       }
-      combat = checkHealth(enemyNADH._1,ehealth,phealth)
+      //Main Function Bit
+      def Attack()={
+        var attack = checkAttack(playerNAS._2,enemyNAS._2)
+        var damage = checkDamage(attack,enemyNAS._3._7,playerNAS._3._7)
+        //Deal Damage
+        damage._1 match{
+          case true => ehealth -= damage._2
+          case false => phealth -= damage._2
+        }
+      }
+      def runAway()={
+        var running = checkRun(playerNAS._3._2,enemyNAS._3._2)
+        running match {
+          case true => println("You got away")
+            combat = false
+          case false => println("You got caught")
+            Attack()
+        }
+
+      }
+
+      combat = checkHealth(enemyNAS._1,ehealth,phealth)
 
 
     }
@@ -215,7 +237,7 @@ abstract class Mundane extends TheDoEverything{
     Charisma = rollDice((race.cha._1,race.cha._2))
     Defence = armours(inventory.armour)
     raece = race.race
-    combatTuple = (Name,(1,Strength,inventory.weapon),Defence,Constitution)
+    combatTuple = (Name,(1,Strength,inventory.weapon),(Strength,Dexterity,Constitution,Intelligence,Wisdom,Charisma,Defence))
   }
 }
 class MundaneElf extends Mundane{
@@ -242,22 +264,35 @@ class MundaneGoblin extends Mundane{
   inventory.armour = "None"
   Name = "Goblin"
 }
+class MundaneGoblinThief extends Mundane{
+  race = Race("GoblinThief",(1,3),(1,5),(1,3),(1,1),(1,1),(1,1))
+  inventory.weapon = "Dagger"
+  inventory.armour = "None"
+  Name = "Goblin Thief"
+}
 
 //Main Game
 object DungeonDelveGame extends App with TheDoEverything {
   def createCharacter(): Mundane = {
-    var chooseRace = readLine("Pick a Race:[Human,Dwarf,Elf]") + " "
+    var chooseRace = readLine("Pick a Race:[Human,Dwarf,Elf]")
     var Player = initialiseRace(chooseRace)
     Player.createCharacterAttributes(true)
     return Player
   }
 
-  def initialiseRace(chooseRace: String): Mundane = {
-    chooseRace.toLowerCase().substring(0, 1) match {
+  def initialiseRace(chooseRaces: String): Mundane = {
+    var chooseRace = chooseRaces
+    if (chooseRace.length == 0){
+      chooseRace += " "
+    }
+    chooseRace.toLowerCase().substring(0,1) match {
       case "h" => new MundaneHuman()
       case "d" => new MundaneDwarf()
       case "e" => new MundaneElf()
-      case "g" => new MundaneGoblin()
+      case "g" => chooseRace.toLowerCase() match{
+        case "goblin" => new MundaneGoblin()
+        case "goblinthief" => new MundaneGoblinThief()
+      }
       case _ =>
         println("You left  it into the hands of the Demons below.")
         new MundaneGoblin()
@@ -270,56 +305,62 @@ object DungeonDelveGame extends App with TheDoEverything {
     return Enemy
   }
 
-  //create all Characters
+  //create Player Character
   var Character = createCharacter()
-  var Goblin = createEnemy("Goblin")
-
-  //Combat(Character.combatTuple,Goblin.combatTuple)
   //Create dungeon
   var dungeonTile = new DungeonTile()
   var theDungeon = dungeonTile.makeDungeon(4)
-  theDungeon.foreach(choices => roomEncounter ::= (choices, ("Goblin", 1)))
+  //Movement,Monsters
+  theDungeon.foreach(choices => roomEncounter ::= (choices, (List("Goblin","GoblinThief"), List(1,3))))
   var currentRoom = 0
-  print(theDungeon)
+  //print(theDungeon)
 
-  def Encounter(encounterTheRoom: Tuple2[List[String], Tuple2[String, Int]])= {
+  def Encounter(encounterTheRoom: Tuple2[List[String], Tuple2[List[String], List[Int]]])= {
+    def monsterCombat(roomMonster:Tuple2[List[String],List[Int]])= {
+      for (k <- 0 until roomMonster._1.length) {
+        var Monster = createEnemy(roomMonster._1(k))
+        for (m <- 0 until roomMonster._2(k)) {
+          Combat(Character.combatTuple, Monster.combatTuple)
+        }
+      }
+    }
+    def move(moveRoom: List[String]) = {
+      var room = moveRoom
+      if (room.length == 1) {
+        room ::= " "
+        room.reverse
+      }
+      print(s"You can go [")
+      room.foreach(value => print(value + ","))
+      print("]")
+      val whereMoving:String = readLine().toLowerCase().substring(0, 1) + " " //append to string
+      println("Room: "+room(1))
+      var head1:String = room.head.toLowerCase().substring(0,1)
+      var tail1:String = room(1).toLowerCase().substring(0,1)
+      println(tail1+","+whereMoving)
+      if (whereMoving == room.head.toLowerCase().substring(0, 1)) {
+        println("Next Room")
+        currentRoom -= 1
+      }
 
-    currentRoom += move(encounterTheRoom._1)
+      else if (whereMoving == room(1).toLowerCase().substring(0,1)) {
+        println("Previous Room")
+        currentRoom += 1
+      }
+      if (currentRoom < 0) {
+        currentRoom = 0
+      }
+    }
+
+    monsterCombat(encounterTheRoom._2)
+    move(encounterTheRoom._1)
 
   }
 
-  def move(moveRoom: List[String]): Int = {
-    var room = moveRoom
-    var movement = 0
-    if (room.length == 1) {
-      room ::= " "
-      room.reverse
-    }
-    print(s"You can go [")
-    room.foreach(value => print(value + ","))
-    print("]")
 
-    val whereMoving = readLine().toLowerCase().substring(0, 1) + " " //append to string
-    println("Room "+room)
-    println(whereMoving + "Hello" + (room(0).toLowerCase().substring(0,1)))
-    println(whereMoving + "Hello" + (room(1).toLowerCase().substring(0,1)))
-    if (whereMoving == room(0).toLowerCase().substring(0, 1)) {
-      println("Next Room")
-      movement += 1
-    }
+   Encounter(roomEncounter(currentRoom))
+  println("the current room:"+currentRoom)
 
-    else if (whereMoving == room(1).toLowerCase().substring(0,1)) {
-      println("Previous Room")
-      movement += 1
-    }
-    if (movement < 0) {
-      movement = 0
-    }
-    return movement
-  }
-
-  Encounter(roomEncounter(currentRoom))
-  println(currentRoom)
 
 
 }
