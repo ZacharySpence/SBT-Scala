@@ -2,7 +2,7 @@ class DungeonDelve {
  var overallDead = false
 }
 
-trait TheDoEverything extends Dice with Items{
+trait TheDoEverything extends Dice with Items {
   var Name: String = " "
   var raece: String = " "
   var Strength: Int = 0
@@ -16,9 +16,16 @@ trait TheDoEverything extends Dice with Items{
   var combatTuple: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]] = ("", (0, 0, ""), (0, 0, 0, 0, 0, 0, 0))
   //var roomEncounter: List[Tuple2[List[String], Tuple2[List[String], List[Int]]]] = List((List(), (List(), List())))
 
-  def Combat(characterSheet:Mundane,
-              playerNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]],
-             enemyNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]]):Boolean = {
+  def checkInventory(Character: Mundane) = {
+    print("\n")
+    println(s"Inventory ${Character.inventory.inventory}")
+    println(s"Weapon: ${Character.inventory.weapon}")
+    println(s"Armour: ${Character.inventory.armour}")
+    print("\n")
+  }
+  def Combat(characterSheet: Mundane,
+             playerNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]],
+             enemyNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]]): Boolean = {
     var dead = false
     println(s"${playerNAS._1} is under attack by ${enemyNAS._1}\n")
 
@@ -31,8 +38,8 @@ trait TheDoEverything extends Dice with Items{
     while (combat) {
 
       def checkAttack(pattack: Tuple3[Int, Int, String], eattack: Tuple3[Int, Int, String]): Int = {
-        var playerAttack = rollDice((pattack._1, pattack._2), weapons(pattack._3))
-        var enemyAttack = rollDice((eattack._1, eattack._2), weapons(eattack._3))
+        var playerAttack = rollDice((pattack._1, pattack._2), weapons(pattack._3)._1)
+        var enemyAttack = rollDice((eattack._1, eattack._2), weapons(eattack._3)._1)
         return (playerAttack - enemyAttack)
       }
 
@@ -60,12 +67,12 @@ trait TheDoEverything extends Dice with Items{
 
 
       //Resolve round
-      def checkHealth(ename: String, ehealth: Int, phealth: Int,alreadyRan:Boolean): Boolean = {
-        if (!alreadyRan){
+      def checkHealth(ename: String, ehealth: Int, phealth: Int, alreadyRan: Boolean): Boolean = {
+        if (!alreadyRan) {
           return false
         }
 
-        else{
+        else {
           if (ehealth <= 0) {
             println(s"You have killed the $ename")
             return false
@@ -98,7 +105,7 @@ trait TheDoEverything extends Dice with Items{
       //Main Function Bit
       def Attack() = {
         var attack = checkAttack(playerNAS._2, enemyNAS._2)
-        println("Attack: "+attack)
+        println("Attack: " + attack)
         var damage = checkDamage(attack, enemyNAS._3._7, playerNAS._3._7)
         //Deal Damage
         damage._1 match {
@@ -106,6 +113,7 @@ trait TheDoEverything extends Dice with Items{
           case false => phealth -= damage._2
         }
       }
+
       def runAway() = {
         var running = checkRun(playerNAS._3._2, enemyNAS._3._2)
         running match {
@@ -117,8 +125,8 @@ trait TheDoEverything extends Dice with Items{
 
       }
 
-      def usePotion(Character:Mundane)= {
-        if (Character.inventory.inventory.length > 0){
+      def usePotion(Character: Mundane) = {
+        if (Character.inventory.inventory.length > 0) {
           print(s"What Potion would you like to use? [")
           Character.inventory.inventory.foreach(value => print(value + ","))
           print("]")
@@ -126,21 +134,19 @@ trait TheDoEverything extends Dice with Items{
           var potion = item.split(" ")
           println("Potion chosen: " + Potions(potion(1))(potion(0)))
           potion(1) match {
-            case "Healing" => phealth += rollDice((Potions(potion(1))(potion(0))._1, Potions(potion(1))(potion(0))._2))
-            case "Damage" => ehealth -= rollDice((Potions(potion(1))(potion(0))._1, Potions(potion(1))(potion(0))._2))
+            case "Healing" => phealth += rollDice((Potions(potion(1))(potion(0))._1._1, Potions(potion(1))(potion(0))._1._2))
+            case "Damage" => ehealth -= rollDice((Potions(potion(1))(potion(0))._1._1, Potions(potion(1))(potion(0))._1._2))
             case _ => println("You have an empty glass which is quite shiny...not much use though")
           }
         }
-        else{
+        else {
           println("You don't have anything in your backpack!")
         }
 
       }
 
-      def checkInventory(Character:Mundane)={
-        println(Character.inventory.inventory.length)
-        println(Character.inventory.inventory)
-      }
+
+
       println(s"Enemy HP: $ehealth, Your HP: $phealth")
       var chooseOption = (readLine("[Attack,Run Away,Use Item,Check Inventory]").toLowerCase() + " ").substring(0, 1)
       chooseOption match {
@@ -150,43 +156,52 @@ trait TheDoEverything extends Dice with Items{
         case "c" => checkInventory(characterSheet)
         case _ => Attack()
       }
-      combat = checkHealth(enemyNAS._1, ehealth, phealth,combat)
+      combat = checkHealth(enemyNAS._1, ehealth, phealth, combat)
     }
     return dead
   }
 
-  def lootRoll(loot: String): String = {
+  def lootRoll(loot:String):String= {
     loot.toLowerCase() match {
       case "armour" => return armKeys(randInt.nextInt(armKeys.size))
       case "weapon" => return wepKeys(randInt.nextInt(wepKeys.size))
       case "potion" =>
-        potKeys(randInt.nextInt(potKeys.size)).toLowerCase() match{
+        potKeys(randInt.nextInt(potKeys.size)).toLowerCase() match {
           case "healing" => return potHealKeys(randInt.nextInt(potHealKeys.size)) + " Healing Potion"
           case "damage" => return potDmgKeys(randInt.nextInt(potDmgKeys.size)) + " Damage Potion"
           case _ => return loot //specific potion
         }
       case _ => return loot //So specific loot
-      }
+    }
+  }
+
+
+  def createChoiceString(listOfStuff:List[String],firstText:String):String={
+    var theString = firstText + " ["
+    listOfStuff.foreach(value => theString += (value + ","))
+    theString = theString.substring(0,theString.length-1)
+    theString += "]"
+    return theString
   }
 }
 
 trait Items {
   var itemList:List[String] = List("Potions")
-  var weapons:Map[String,Int]= Map("Sword"-> 2,"Club"->0,"Dagger"->1,"GreatAxe" ->4).withDefaultValue(0)
+  var weapons:Map[String,Tuple2[Int,Int]]= Map("Sword"-> (2,3),"Club"->(0,0),"Dagger"->(1,1),"GreatAxe" ->(4,6)).withDefaultValue(0,0)
   var wepKeys = weapons.keys.toList
-  var armours:Map[String,Int] = Map("None"->0,"Leather"->1,"ChainMail"->2,"PlateMail"->4).withDefaultValue(1)
+  var armours:Map[String,Tuple2[Int,Int]] = Map("None"->(0,0),"Leather"->(1,2),"ChainMail"->(2,5),"PlateMail"->(4,12)).withDefaultValue(1,2)
   var armKeys = armours.keys.toList
-  var Potions:Map[String,Map[String,Tuple2[Int,Int]]] = Map(
-    "Healing"->Map("Light"->(1,8),"Moderate"->(2,8),"Critical" -> (4,8)),
-    "Damage"->Map("Acid" -> (1,4),"Explosive" ->(1,8),"Frost"->(1,4)))
+  var Potions:Map[String,Map[String,Tuple2[Tuple2[Int,Int],Int]]] = Map(
+    "Healing"->Map("Light"->((1,8),2),"Moderate"->((2,8),5),"Critical" -> ((4,8),15)),
+    "Damage"->Map("Acid" -> ((1,4),4),"Explosive" ->((1,8),10),"Frost"->((1,6),7)))
   var potKeys = Potions.keys.toList
   var potHealKeys = Potions("Healing").keys.toList
   var potDmgKeys = Potions("Damage").keys.toList
 }
 
 class Inventory extends Items{
-  var weapon = "Sword"
-  var armour = "Leather"
+  var weapon = "Club"
+  var armour = "None"
   var inventory:List[String] = List()
 }
 trait Magic{}
@@ -289,7 +304,7 @@ abstract class Mundane extends TheDoEverything{
   Name = ""
   var inventory = new Inventory()
   var loot:List[String] = List()
-  var characterPoints = 0
+  var characterPoints = 5
 
 
   def createCharacterAttributes(name:Boolean = false) = {
@@ -303,18 +318,59 @@ abstract class Mundane extends TheDoEverything{
     Intelligence = rollDice((race.intel._1,race.intel._2))+bonuses._4
     Wisdom = rollDice((race.wis._1,race.wis._2))+bonuses._5
     Charisma = rollDice((race.cha._1,race.cha._2))+bonuses._6
-    Defence = armours(inventory.armour)
+    Defence = armours(inventory.armour)._1
     raece = race.race
     combatTuple = (Name,(1,Strength,inventory.weapon),(Strength,Dexterity,Constitution,Intelligence,Wisdom,Charisma,Defence))
   }
 
   def chooseItems()={
+    //Choose what to buy
+    def buyChoice() ={
+      var choice = (readLine("What would you like to spend points on [Weapons,Armour,Potions] or [Finished]").toLowerCase + " ").substring(0,1)
+      choice match{
+        case "w" => if(inventory.weapon == ""){thingChoice(wepKeys,"Weapon")}else{println("You already have a weapon")}
+        case "a" => if(inventory.armour == ""){thingChoice(armKeys,"Armour")}else{println("You already have armour")}
+        case "p" =>
+          var choice2 = (readLine(createChoiceString(potKeys,"What type of potion")).toLowerCase() + " ").substring(0,1)
+          choice2 match {
+            case "h" => thingChoice(potHealKeys,"Potion"," Healing ")
+            case "d" => thingChoice(potDmgKeys,"Potion"," Damage ")
+            case _ => println("We don't sell that here")
+          }
+        case _ => println("What are you trying to buy fool")
+      }
+    }
+    def checkPoints(chosenItemCost:Int):Boolean={
+      if (chosenItemCost <= characterPoints){
+        characterPoints -= chosenItemCost
+        return true
+      }
+      println("You don't have enough points for that!")
+      return false
+    }
+    //Buying certain thing
+    def thingChoice(keyList:List[String],thing:String,moreDetail:String="")= {
+      var choose = ""
+      while (!keyList.contains(choose)) {
+        choose = readLine(createChoiceString(keyList, s"Choose a $thing from")).toLowerCase().split(" ").map(_.capitalize).mkString("") //Doesn't work with greatAxe(capital mid letter
+      }
+      thing match {
+        case "Weapon" => if(checkPoints(weapons(choose)._2)){inventory.weapon = choose}
+        case "Armour" => if(checkPoints(armours(choose)._2)){inventory.armour = choose}
+        case "Potion" => if(checkPoints(Potions(moreDetail.replaceAll(" ",""))(choose)._2)){inventory.inventory ::= (choose + moreDetail + thing)}
+      }
+    }
+    while (characterPoints > 0){
+      println("Your points to spends: "+characterPoints)
+      buyChoice()
+    }
 
   }
 }
 class MundaneElf extends Mundane{
   race = Race("Elf",(1,6),(1,8),(2,6),(1,8),(1,6),(1,8))
   bonuses =(0,2,6,2,0,0)
+  characterPoints = 5
   inventory.weapon = "Sword"
   inventory.armour = "Leather"
 
@@ -322,6 +378,7 @@ class MundaneElf extends Mundane{
 class MundaneDwarf extends Mundane{
   race = Race("Dwarf",(1,8),(1,4),(2,10),(1,6),(1,6),(1,4))
   bonuses = (2,0,10,0,0,0)
+  characterPoints = 5
   inventory.weapon = "Club"
   inventory.armour = "PlateMail"
 
@@ -329,8 +386,9 @@ class MundaneDwarf extends Mundane{
 class MundaneHuman extends Mundane{
   race = Race("Human",(1,6),(1,6),(2,6),(1,6),(1,6),(1,6))
   bonuses = (1,1,6,1,1,1)
-  inventory.weapon = "Club"
-  inventory.armour = "PlateMail"
+  characterPoints = 20
+  //inventory.weapon = "Club"
+  //inventory.armour = "PlateMail"
 
 }
 class MundaneGoblin extends Mundane{
@@ -361,6 +419,7 @@ object DungeonDelveGame extends App with TheDoEverything {
     var chooseRace = readLine("Pick a Race:[Human,Dwarf,Elf]")
     var Player = initialiseRace(chooseRace)
     Player.createCharacterAttributes(true)
+    Player.chooseItems()
     return Player
   }
 
@@ -392,6 +451,7 @@ object DungeonDelveGame extends App with TheDoEverything {
 
   //create Player Character
   var Character = createCharacter()
+  checkInventory(Character)
 
   //Movement,Monsters
   def fillDungeon(dungeon:List[List[String]]):List[Tuple2[List[String], Tuple2[List[String], List[Int]]]]={
@@ -413,8 +473,6 @@ object DungeonDelveGame extends App with TheDoEverything {
   var dungeonTile = new DungeonTile()
   var theDungeon = dungeonTile.makeDungeon(4).reverse
   var roomEncounter = fillDungeon(theDungeon)
-
-  println(roomEncounter(3))
 
   def Encounter(encounterTheRoom: Tuple2[List[String], Tuple2[List[String], List[Int]]])= {
     def monsterCombat(roomMonster:Tuple2[List[String],List[Int]])= {
@@ -442,10 +500,10 @@ object DungeonDelveGame extends App with TheDoEverything {
         room ::= " "
         room = room.reverse
       }
-      print(s"You can go [")
-      room.foreach(value => print(value + ","))
-      print("]")
-      val whereMoving:String = (readLine().toLowerCase()+ " ").substring(0, 1)  //append to string
+//      print(s"You can go")
+//      room.foreach(value => print(value + ","))
+//      print("]")
+      val whereMoving = (readLine(createChoiceString(room,"You can go")).toLowerCase()+ " ").substring(0, 1)  //append to string
       if (whereMoving == room.head.toLowerCase().substring(0, 1)) {
         currentRoom += 1
       }
@@ -471,7 +529,6 @@ object DungeonDelveGame extends App with TheDoEverything {
     Encounter(roomEncounter(currentRoom))
     println("the current room:"+currentRoom)
   }
-  println("YOU DIED")
 
 
 
