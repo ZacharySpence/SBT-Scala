@@ -25,7 +25,7 @@ trait TheDoEverything extends Dice with Items {
     print("\n")
   }
 
-  def Combat(characterSheet: Mundane,
+  def Combat(characterSheet:Mundane,Spells:List[String]=List(),
              playerNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]],
              enemyNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]]): Boolean = {
     var dead = false
@@ -147,15 +147,18 @@ trait TheDoEverything extends Dice with Items {
 
       }
 
-
+      def castSpell(Character:Mundane,Spells:List[String])={
+        Character.
+      }
 
       println(s"Enemy HP: $ehealth, Your HP: $phealth")
-      var chooseOption = (readLine("[Attack,Run Away,Use Item,Check Inventory]").toLowerCase() + " ").substring(0, 1)
+      var chooseOption = (readLine("[Attack,Run Away,Use Item,Inventory,Case Magic]").toLowerCase() + " ").substring(0, 1)
       chooseOption match {
         case "a" => Attack()
         case "r" => runAway()
         case "u" => usePotion(characterSheet)
-        case "c" => checkInventory(characterSheet)
+        case "i" => checkInventory(characterSheet)
+        case "m"|"c" => castSpell(Spells)
         case _ => Attack()
       }
       combat = checkHealth(enemyNAS._1, ehealth, phealth, combat)
@@ -206,7 +209,22 @@ class Inventory extends Items{
   var armour = "None"
   var inventory:List[String] = List()
 }
-trait Magic{}
+
+class SpellBook extends Magic{
+  var spellBook:List[String] = List()
+}
+
+trait Magic{
+
+  var healingSpellMap:Map[String,Tuple2[Int,Int]] = Map("Light"->(1,6),"Moderate"->(2,6),"Critical"->(4,6))
+  var healSpellKeys = healingSpellMap.keys.toList
+  var damageSpellMap:Map[String,Map[String,Tuple2[Tuple2[Int,Int],Tuple2[Int,String]]]]= Map(//(rollDice),(castingDC,effect(or damage type))
+    "Fire"->Map("Burning Hands"->((1,8),(12,"Fire")),"Flame Bolt"->((3,3),(15,"Fire")),"FireBall"->((2,10),(18,"Fire"))),
+    "Water"-> Map("Water Spray"->((1,4),(6,"Water")),"Water Bolt"->((2,4),(10,"Water")),"Ice Lance"->((1,10),(13,"Ice"))))
+  var damSpellKeys = damageSpellMap.keys.toList
+  var damSpellFireKeys = damageSpellMap("Fire").keys.toList
+  var damSpellWaterKeys = damageSpellMap("Water").keys.toList
+}
 trait Dice{
   var randInt = scala.util.Random
   def rollDice(diceTuple:Tuple2[Int,Int],bonus:Int=0):Int={
@@ -369,6 +387,13 @@ abstract class Mundane extends TheDoEverything{
 
   }
 }
+
+trait Magical{
+  var spellbook = new SpellBook()
+}
+class MagicalElf extends MundaneElf with Magical{
+  spellbook.spellBook = List("Flame Bolt","Water Bolt")
+}
 class MundaneElf extends Mundane{
   race = Race("Elf",(1,6),(1,8),(2,6),(1,8),(1,6),(1,8))
   bonuses =(0,2,6,2,0,0)
@@ -461,7 +486,7 @@ object DungeonDelveGame extends App with TheDoEverything {
   var theDungeon:List[List[String]] = List()
   var roomEncounter:List[Tuple2[List[String], Tuple2[List[String], List[Int]]]] = List()
 
-  //MonsterList
+  //MonsterList Premade
   var MonsterList:List[Tuple2[List[String],List[Int]]] = List((List("Goblin"),List(1)),(List("Goblin"),List(3)),(List("Goblin","GoblinThief"),List(4,1)),(List("Minotaur"),List(1)))
 
 
