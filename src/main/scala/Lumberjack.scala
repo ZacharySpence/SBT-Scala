@@ -27,7 +27,7 @@ object Lumberjack extends App{
   def printLogStorage(size:Int,logStorage:Array[Int])={
     for (k <- 1 to size*size){
       print(logStorage(k)+",")
-      if (k%3 == 0){
+      if (k%size == 0){
         println("")
       }
     }
@@ -38,6 +38,6 @@ object Lumberjack extends App{
     printLogStorage(size,logStorage)
   }
 
-  doItAll(3,7)
+  doItAll(4,12)
 
 }
