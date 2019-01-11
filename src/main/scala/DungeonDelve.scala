@@ -14,6 +14,7 @@ trait TheDoEverything extends Dice with Items {
   var Defence: Int = 0
   var currentRoom: Int = 0
   var combatTuple: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]] = ("", (0, 0, ""), (0, 0, 0, 0, 0, 0, 0))
+
   //var roomEncounter: List[Tuple2[List[String], Tuple2[List[String], List[Int]]]] = List((List(), (List(), List())))
 
   def checkInventory(Character: Mundane) = {
@@ -23,6 +24,7 @@ trait TheDoEverything extends Dice with Items {
     println(s"Armour: ${Character.inventory.armour}")
     print("\n")
   }
+
   def Combat(characterSheet: Mundane,
              playerNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]],
              enemyNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]]): Boolean = {
@@ -337,7 +339,7 @@ abstract class Mundane extends TheDoEverything{
             case "d" => thingChoice(potDmgKeys,"Potion"," Damage ")
             case _ => println("We don't sell that here")
           }
-        case _ => println("What are you trying to buy fool")
+        case _ => characterPoints = 0
       }
     }
     def checkPoints(chosenItemCost:Int):Boolean={
@@ -453,26 +455,115 @@ object DungeonDelveGame extends App with TheDoEverything {
   var Character = createCharacter()
   checkInventory(Character)
 
-  //Movement,Monsters
-  def fillDungeon(dungeon:List[List[String]]):List[Tuple2[List[String], Tuple2[List[String], List[Int]]]]={
+  //Create dungeon
+  var dungeonThings:Tuple2[Int,List[Tuple2[List[String],List[Int]]]] = (4,MonsterList)
+  var dungeonTile = new DungeonTile()
+  var theDungeon:List[List[String]] = List()
+  var roomEncounter:List[Tuple2[List[String], Tuple2[List[String], List[Int]]]] = List()
 
-    var MonsterList:List[Tuple2[List[String],List[Int]]] = List(
-      (List("Goblin"),List(1)),
-      (List("Goblin"),List(3)),
-      (List("Goblin","GoblinThief"),List(4,1)),
-      (List("Minotaur"),List(1)))
+  //MonsterList
+  var MonsterList:List[Tuple2[List[String],List[Int]]] = List((List("Goblin"),List(1)),(List("Goblin"),List(3)),(List("Goblin","GoblinThief"),List(4,1)),(List("Minotaur"),List(1)))
+
+
+  var customize = (readLine("Would you like to create your own dungeon? or randomly generate: [Own,Generate]").toLowerCase()+ " ").substring(0,1)
+  customize match{
+    case "o"|"m" => doItYourself()
+    case "g"|"r" => doItYourself(generate=true)
+    case _ => doItYourself(dungeonThings,false)
+  }
+  def doItYourself(things:Tuple2[Int,List[Tuple2[List[String],List[Int]]]]=(0,List()),doIt:Boolean=true,generate:Boolean=false)={
+    var MonsterGeneration= Map("Goblin"->(1,5),"GoblinThief"->(1,3),"Minotaur"->(1,1))
+    var MonGenKeys = MonsterGeneration.keys.toList
+    println(MonGenKeys)
+
+    if(!doIt){
+      theDungeon = dungeonTile.makeDungeon(things._1).reverse
+      roomEncounter = fillDungeon(theDungeon,things._2)
+    }
+    else{
+      println("How many rooms 1-∞")
+      var numberOfRooms = readInt()
+      var monsterList:List[Tuple2[List[String],List[Int]]] = List()
+      def chooseRoomMonsters(generate:Boolean)={
+          var done = false
+          var mList:List[String] = List()
+          var mCount:List[Int] = List()
+          var timesRun = 0
+          while(!done){
+            timesRun +=1
+            var monster = ""
+            var howMany = 0
+            var checkDone = ""
+            if (generate){
+              println("Generating")
+             // monster = MonGenKeys(randInt.nextInt(MonGenKeys.length))
+              //println(mList.contains(monster))
+              do {//Stops duplicates
+                monster = MonGenKeys(randInt.nextInt(MonGenKeys.length))
+                println("monmon"+monster)
+                if (mList.contains(monster)){//Add 1 to that monster group
+                  println("Here")
+                  mCount.updated(mList.indexOf(monster),(mCount(mList.indexOf(monster))+1))
+                }
+              }while(mList.contains(monster))
+              howMany = rollDice((MonsterGeneration(monster)._1,MonsterGeneration(monster)._2))
+              var checkIt = randInt.nextInt(5-timesRun)+1
+              if (mList.length == MonGenKeys.length-1){
+                checkIt = 0
+              }
+              println("check"+checkIt)
+              checkIt match {
+                case 0|1|2 => checkDone = "y"
+                case _ => checkDone = "n"
+              }
+
+            }
+            else{
+              while(!MonGenKeys.contains(monster) | mList.contains(monster)){
+              monster = readLine(createChoiceString(MonGenKeys,"Choose a Monster from:"))
+              }
+              println(s"How many $monster will there be in that room")
+              howMany = readInt()
+              checkDone = (readLine("Are you done?").toLowerCase+ " ").substring(0,1)
+            }
+            mList ::= monster
+            mCount ::= howMany
+
+            checkDone match{
+              case "y" => done = true
+              case _ => done = false
+            }
+          }
+          println((mList,mCount))
+          monsterList ::= (mList,mCount)
+        }
+
+        for (k <- 0 until numberOfRooms){
+          println("Start"+k)
+          chooseRoomMonsters(generate)
+        }
+      //Visual of dungeon for feedback
+      theDungeon = dungeonTile.makeDungeon(numberOfRooms).reverse
+      print("hEEEERE")
+      roomEncounter = fillDungeon(theDungeon,monsterList.reverse)
+      println("Your dungeon Has:")
+      for (k <- 1 to numberOfRooms){
+        println(s"Room $k: ${monsterList(k-1)}")
+      }
+    }
+
+  }
+  //Movement,Monsters
+  def fillDungeon(dungeon:List[List[String]],monsterList:List[Tuple2[List[String],List[Int]]]):List[Tuple2[List[String], Tuple2[List[String], List[Int]]]]={
+
     var filledRooms:List[Tuple2[List[String],Tuple2[List[String],List[Int]]]] = List()
     for (k <- 0 until dungeon.length){
-      filledRooms ::= (dungeon(k),MonsterList(k))
+      filledRooms ::= (dungeon(k),monsterList(k))
     }
     filledRooms = filledRooms.reverse
     return filledRooms
   }
 
-  //Create dungeon
-  var dungeonTile = new DungeonTile()
-  var theDungeon = dungeonTile.makeDungeon(4).reverse
-  var roomEncounter = fillDungeon(theDungeon)
 
   def Encounter(encounterTheRoom: Tuple2[List[String], Tuple2[List[String], List[Int]]])= {
     def monsterCombat(roomMonster:Tuple2[List[String],List[Int]])= {
