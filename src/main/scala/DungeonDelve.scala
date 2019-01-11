@@ -147,8 +147,8 @@ trait TheDoEverything extends Dice with Items {
 
       }
 
-      def castSpell(Character:Mundane,Spells:List[String])={
-        Character.
+      def castSpell(Character:Magical)={
+        Character.spellBook.spellBook
       }
 
       println(s"Enemy HP: $ehealth, Your HP: $phealth")
@@ -158,7 +158,7 @@ trait TheDoEverything extends Dice with Items {
         case "r" => runAway()
         case "u" => usePotion(characterSheet)
         case "i" => checkInventory(characterSheet)
-        case "m"|"c" => castSpell(Spells)
+        case "m"|"c" => castSpell(characterSheet)
         case _ => Attack()
       }
       combat = checkHealth(enemyNAS._1, ehealth, phealth, combat)
@@ -388,12 +388,16 @@ abstract class Mundane extends TheDoEverything{
   }
 }
 
-trait Magical{
+trait Magicaly{
   var spellbook = new SpellBook()
 }
-class MagicalElf extends MundaneElf with Magical{
-  spellbook.spellBook = List("Flame Bolt","Water Bolt")
+class Magical extends Mundane{
+  var spellBook = new SpellBook()
 }
+//class MagicalElf extends MundaneElf with Magicaly{
+//  spellbook.spellBook = List("Flame Bolt","Water Bolt")
+//}
+class MagicalElf extends Magical{}
 class MundaneElf extends Mundane{
   race = Race("Elf",(1,6),(1,8),(2,6),(1,8),(1,6),(1,8))
   bonuses =(0,2,6,2,0,0)
