@@ -34,7 +34,7 @@ trait TheDoEverything extends Dice with Items with Magic {
 
     //1time instantiating variables
     var ehealth = enemyNAS._3._3
-    var phealth = playerNAS._3._3
+    var phealth = playerNAS._3._3 //need to have player health change
     var combat = true
     //Attack phase => +ve is player does damage, -ve is enemy damage
     //multi-instantiating variables
@@ -200,6 +200,7 @@ trait TheDoEverything extends Dice with Items with Magic {
       }
       combat = checkHealth(enemyNAS._1, ehealth, phealth, combat)
     }
+    characterSheet.health = phealth
     return dead
   }
 
@@ -364,6 +365,7 @@ abstract class Mundane extends TheDoEverything{
   var inventory = new Inventory()
   var loot:List[String] = List()
   var characterPoints = 5
+  var health = 0
 
 
   def createCharacterAttributes(name:Boolean = false) = {
@@ -380,6 +382,7 @@ abstract class Mundane extends TheDoEverything{
     Defence = armours(inventory.armour)._1
     raece = race.race
     combatTuple = (Name,(1,Strength,inventory.weapon),(Strength,Dexterity,Constitution,Intelligence,Wisdom,Charisma,Defence))
+    health = Constitution
   }
 
   def chooseItems()={
@@ -431,9 +434,7 @@ abstract class Mundane extends TheDoEverything{
 //class MagicalElf extends MundaneElf with Magicaly{
 //  spellbook.spellBook = List("Flame Bolt","Water Bolt")
 //}
-class MagicalElf extends MundaneElf{
-  spellBook.spellBook = List("Flame Bolt","Water Bolt")
-}
+
 class MundaneElf extends Mundane{
   race = Race("Elf",(1,6),(1,8),(2,6),(1,8),(1,6),(1,8))
   bonuses =(0,2,6,2,0,0)
@@ -441,6 +442,9 @@ class MundaneElf extends Mundane{
   inventory.weapon = "Sword"
   inventory.armour = "Leather"
 
+}
+class MagicalElf extends MundaneElf{
+  spellBook.spellBook = List("Flame Bolt","Water Bolt")
 }
 class MundaneDwarf extends Mundane{
   race = Race("Dwarf",(1,8),(1,4),(2,10),(1,6),(1,6),(1,4))
@@ -471,13 +475,20 @@ class MundaneGoblinThief extends Mundane{
   Name = "Goblin Thief"
   inventory.inventory = List("Potion")
 }
+class MundaneMinitaur extends Mundane{
+  race = Race("Minitaur",(1,6),(1,2),(1,8),(1,4),(1,2),(1,2))
+  bonuses = (1,0,6,0,0,0)
+  inventory.weapon = "GreatAxe"
+  inventory.armour = "ThickHide"
+  Name = "Minitaur"
+}
 class MundaneMinotaur extends Mundane{
-  race = Race("Goblin",(1,8),(1,4),(1,10),(1,4),(1,2),(1,2))
-  bonuses = (1,0,10,0,0,0)
+  race = Race("Minotaur",(1,8),(1,4),(1,10),(1,4),(1,2),(1,2))
+  bonuses = (3,0,20,0,0,0)
   inventory.weapon = "GreatAxe"
   inventory.armour = "ThickHide"
   Name = "Minotaur"
-  inventory.inventory = List("GreatAxe")
+  inventory.inventory = List("The Key")
 }
 
 //Main Game
@@ -499,7 +510,10 @@ object DungeonDelveGame extends App with TheDoEverything {
       case "h" => new MundaneHuman()
       case "d" => new MundaneDwarf()
       case "e" => new MagicalElf()
-      case "m" => new MundaneMinotaur()
+      case "m" => chooseRace.toLowerCase() match{
+        case "minotaur" => new MundaneMinotaur()
+        case "minitaur" => new MundaneMinitaur()
+      }
       case "g" => chooseRace.toLowerCase() match{
         case "goblin" => new MundaneGoblin()
         case "goblinthief" => new MundaneGoblinThief()
@@ -538,7 +552,7 @@ object DungeonDelveGame extends App with TheDoEverything {
     case _ => doItYourself(dungeonThings,false)
   }
   def doItYourself(things:Tuple2[Int,List[Tuple2[List[String],List[Int]]]]=(0,List()),doIt:Boolean=true,generate:Boolean=false)={
-    var MonsterGeneration= Map("Goblin"->(1,5),"GoblinThief"->(1,3),"Minotaur"->(1,1))
+    var MonsterGeneration= Map("Goblin"->(1,5),"GoblinThief"->(1,3),"Minitaur"->(1,1))
     var MonGenKeys = MonsterGeneration.keys.toList
     println(MonGenKeys)
 
@@ -550,7 +564,7 @@ object DungeonDelveGame extends App with TheDoEverything {
       println("How many rooms 1-∞")
       var numberOfRooms = readInt()
       var monsterList:List[Tuple2[List[String],List[Int]]] = List()
-      def chooseRoomMonsters(generate:Boolean)={
+      def chooseRoomMonsters(generate:Boolean,k:Int)={
           var done = false
           var mList:List[String] = List()
           var mCount:List[Int] = List()
@@ -592,6 +606,10 @@ object DungeonDelveGame extends App with TheDoEverything {
               howMany = readInt()
               checkDone = (readLine("Are you done?").toLowerCase+ " ").substring(0,1)
             }
+              if (k-1 == numberOfRooms){//forces Minotaur boss in last room
+                monster = "Minotaur"
+                howMany = 1
+              }
             mList ::= monster
             mCount ::= howMany
 
@@ -606,7 +624,7 @@ object DungeonDelveGame extends App with TheDoEverything {
 
         for (k <- 0 until numberOfRooms){
           println("Start"+k)
-          chooseRoomMonsters(generate)
+          chooseRoomMonsters(generate,k)
         }
       //Visual of dungeon for feedback
       theDungeon = dungeonTile.makeDungeon(numberOfRooms).reverse
@@ -644,10 +662,12 @@ object DungeonDelveGame extends App with TheDoEverything {
         for (m <- 0 until roomMonster._2(k)) {
 
           dead = Combat(Character,Character.combatTuple, Monster.combatTuple)
-          Monster.inventory.inventory.foreach(lootItem => {
-            var loot = lootRoll(lootItem)
-            Character.inventory.inventory ::= loot
-            println(s"You have looted a $loot")})
+          if (!dead){
+            Monster.inventory.inventory.foreach(lootItem => {
+              var loot = lootRoll(lootItem)
+              Character.inventory.inventory ::= loot
+              println(s"You have looted a $loot")})
+          }
         }
       }
     }
@@ -682,14 +702,11 @@ object DungeonDelveGame extends App with TheDoEverything {
   }
 
   var dead = false
-  while(!dead){
+  while(!dead && !Character.inventory.inventory.contains("The Key")){
     Encounter(roomEncounter(currentRoom))
     println("the current room:"+currentRoom)
   }
-
-
-
-
-
-
+  if (Character.inventory.inventory.contains("The Key")){
+    println("You won!")
+  }
 }

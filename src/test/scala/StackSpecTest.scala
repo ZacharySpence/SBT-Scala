@@ -7,69 +7,69 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.UUID.randomUUID
 
 //composing fixtures by stacking traits
-trait Builder extends SuiteMixin{ this: Suite =>
-  val builder = new StringBuilder
-  abstract override def withFixture(test:NoArgTest) ={
-    builder.append("ScalaTest is ")
-    try super.withFixture(test) //to be stackable must call super.withFixture
-    finally builder.clear()
-  }
-}
-trait Buffer extends SuiteMixin {this: Suite =>
-  val buffer = new ListBuffer[String]
-  abstract override def withFixture(test:NoArgTest)={
-    try super.withFixture(test)
-    finally buffer.clear()
-  }
-}
-
-class ExampleWithTraits extends FlatSpec with Builder with Buffer{
-  "Testing" should "be easy" in {
-    builder.append("easy!")
-    assert(builder.toString === "ScalaTest is easy!")
-    assert(buffer.isEmpty)
-    buffer += "sweet"
-  }
-  it should "be fun" in {
-    builder.append("fun!")
-    assert(builder.toString === "ScalaTest is fun!")
-    assert(buffer.isEmpty)
-    buffer += "clear"
-  }
-}
-abstract class UnitSpec extends FlatSpec with Matchers
-  with OptionValues with Inside with Inspectors{}
-
-
-//overriding before and after functions
-trait BuilderBAA extends BeforeAndAfter{ this:Suite =>
-  val builder = new StringBuilder
-  override def beforeEach(): Unit ={
-    builder.append("ScalaTest is ")
-    super.beforeEach()
-  }
-  override def afterEach(): Unit ={
-    try super.afterEach()
-    finally builder.clear()
-  }
-}
-
-trait BufferBAA extends BeforeAndAfter{ this:Suite =>
-  val buffer = new ListBuffer[String]
-  override def afterEach(): Unit ={
-    try super.afterEach()
-    finally buffer.clear()
-  }
-}
-
-class ExampleSpecBAA extends FlatSpec with BuilderBAA with BufferBAA{
-  "testing" should "be easy" in{
-    builder.append("easy!")
-    assert(builder.toString === "ScalaTest is easy!")
-    assert(buffer.isEmpty)
-    buffer += "sweet"
-  }
-}
+//trait Builder extends SuiteMixin{ this: Suite =>
+//  val builder = new StringBuilder
+//  abstract override def withFixture(test:NoArgTest) ={
+//    builder.append("ScalaTest is ")
+//    try super.withFixture(test) //to be stackable must call super.withFixture
+//    finally builder.clear()
+//  }
+//}
+//trait Buffer extends SuiteMixin {this: Suite =>
+//  val buffer = new ListBuffer[String]
+//  abstract override def withFixture(test:NoArgTest)={
+//    try super.withFixture(test)
+//    finally buffer.clear()
+//  }
+//}
+//
+//class ExampleWithTraits extends FlatSpec with Builder with Buffer{
+//  "Testing" should "be easy" in {
+//    builder.append("easy!")
+//    assert(builder.toString === "ScalaTest is easy!")
+//    assert(buffer.isEmpty)
+//    buffer += "sweet"
+//  }
+//  it should "be fun" in {
+//    builder.append("fun!")
+//    assert(builder.toString === "ScalaTest is fun!")
+//    assert(buffer.isEmpty)
+//    buffer += "clear"
+//  }
+//}
+//abstract class UnitSpec extends FlatSpec with Matchers
+//  with OptionValues with Inside with Inspectors{}
+//
+//
+////overriding before and after functions
+//trait BuilderBAA extends BeforeAndAfter{ this:Suite =>
+//  val builder = new StringBuilder
+//  override def beforeEach(): Unit ={
+//    builder.append("ScalaTest is ")
+//    super.beforeEach()
+//  }
+//  override def afterEach(): Unit ={
+//    try super.afterEach()
+//    finally builder.clear()
+//  }
+//}
+//
+//trait BufferBAA extends BeforeAndAfter{ this:Suite =>
+//  val buffer = new ListBuffer[String]
+//  override def afterEach(): Unit ={
+//    try super.afterEach()
+//    finally buffer.clear()
+//  }
+//}
+//
+//class ExampleSpecBAA extends FlatSpec with BuilderBAA with BufferBAA{
+//  "testing" should "be easy" in{
+//    builder.append("easy!")
+//    assert(builder.toString === "ScalaTest is easy!")
+//    assert(buffer.isEmpty)
+//    buffer += "sweet"
+//  }
+//}
 
 
 //SHARING TESTS
@@ -102,90 +102,90 @@ class Stack[T]{
 
   override def toString = buf.mkString("Stack(",",",")")
 }
-trait StackBehaviours{ this:FlatSpec =>
-  def nonEmptyStack(newStack: => Stack[Int],lastItemAdded:Int): Unit ={
-    it should "be non-empty" in{
-      assert(!newStack.empty)
-    }
-    it should "return the top item on peek" in{
-      assert(newStack.peek === lastItemAdded)
-    }
-    it should "not remove the top item on peek" in{
-      val stack = newStack
-      val size = stack.size
-      assert(stack.peek === lastItemAdded)
-      assert(stack.size === size)
-    }
-    it should "remove the top item on pop" in{
-      val stack = newStack
-      val size = stack.size
-      assert(stack.pop === lastItemAdded)
-      assert(stack.size === size - 1)
-    }
-  }
-  def nonFullStack(newStack:=>Stack[Int]){
-    it should "not be full" in {
-      assert(!newStack.full)
-    }
-
-    it should "add to teh top on push" in {
-      val stack = newStack
-      val size = stack.size
-      stack.push(7)
-      assert(stack.size === size+1)
-      assert(stack.peek === 7)
-    }
-  }
-}
+//trait StackBehaviours{ this:FlatSpec =>
+//  def nonEmptyStack(newStack: => Stack[Int],lastItemAdded:Int): Unit ={
+//    it should "be non-empty" in{
+//      assert(!newStack.empty)
+//    }
+//    it should "return the top item on peek" in{
+//      assert(newStack.peek === lastItemAdded)
+//    }
+//    it should "not remove the top item on peek" in{
+//      val stack = newStack
+//      val size = stack.size
+//      assert(stack.peek === lastItemAdded)
+//      assert(stack.size === size)
+//    }
+//    it should "remove the top item on pop" in{
+//      val stack = newStack
+//      val size = stack.size
+//      assert(stack.pop === lastItemAdded)
+//      assert(stack.size === size - 1)
+//    }
+//  }
+//  def nonFullStack(newStack:=>Stack[Int]){
+//    it should "not be full" in {
+//      assert(!newStack.full)
+//    }
+//
+//    it should "add to teh top on push" in {
+//      val stack = newStack
+//      val size = stack.size
+//      stack.push(7)
+//      assert(stack.size === size+1)
+//      assert(stack.peek === 7)
+//    }
+//  }
+//}
 
 //Call the stack behaviours like:
 //it should behave like nonEmptyStack(stackWithOneItem, lastValuePushed)
 //it should behave like nonFullStack(stackWithOneItem)
 
 //More functional way
-class sharedTestExampleSpec extends FlatSpec with StackBehaviours{
-  def emptyStack = new Stack[Int]
-  def fullStack = {
-    val stack = new Stack[Int]
-    for(i <- 0 until stack.MAX)
-      stack.push(i)
-    stack
-  }
-  def stackWithOneItem = {
-    val stack = new Stack(Int)
-    stack.push(9)
-    stack
-  }
-  def stackWithOneItemLessThanCapacity = {
-    val stack = new Stack[Int]
-    for(i<- 1 to 9)
-      stack.push(i)
-    stack
-  }
-  val lastValuePushed = 9
-  "A Stack (when empty)" should "be empty" in {
-    assert(emptyStack.empty)
-  }
-  it should "complain on pop" in {
-    intercept[IllegalStateException]{
-      emptyStack.pop
-    }
-
-  }
-  "A stack (with one item)" should behave like nonEmptyStack(stackWithOneItem, lastValuePushed)
-  it should behave like nonFullStack(stackWithOneItem)
-  "A stack (with one item less than capacity)" should behave like nonEmptyStack(stackWithOneItemLessThanCapacity, lastValuePushed)
-  it should behave like nonFullStack(stackWithOneItemLessThanCapacity)
-  "A stack (full)" should "be full" in{
-    assert(fullStack.full)
-  }
-  it should behave like nonEmptyStack(fullStack,lastValuePushed)
-  it should "complain on a push" in{
-    intercept[IllegalStateException]{
-      fullStack.push(10)
-    }
-  }
-}
+//class sharedTestExampleSpec extends FlatSpec with StackBehaviours{
+//  def emptyStack = new Stack[Int]
+//  def fullStack = {
+//    val stack = new Stack[Int]
+//    for(i <- 0 until stack.MAX)
+//      stack.push(i)
+//    stack
+//  }
+//  def stackWithOneItem = {
+//    val stack = new Stack(Int)
+//    stack.push(9)
+//    stack
+//  }
+//  def stackWithOneItemLessThanCapacity = {
+//    val stack = new Stack[Int]
+//    for(i<- 1 to 9)
+//      stack.push(i)
+//    stack
+//  }
+//  val lastValuePushed = 9
+//  "A Stack (when empty)" should "be empty" in {
+//    assert(emptyStack.empty)
+//  }
+//  it should "complain on pop" in {
+//    intercept[IllegalStateException]{
+//      emptyStack.pop
+//    }
+//
+//  }
+//  "A stack (with one item)" should behave like nonEmptyStack(stackWithOneItem, lastValuePushed)
+//  it should behave like nonFullStack(stackWithOneItem)
+//  "A stack (with one item less than capacity)" should behave like nonEmptyStack(stackWithOneItemLessThanCapacity, lastValuePushed)
+//  it should behave like nonFullStack(stackWithOneItemLessThanCapacity)
+//  "A stack (full)" should "be full" in{
+//    assert(fullStack.full)
+//  }
+//  it should behave like nonEmptyStack(fullStack,lastValuePushed)
+//  it should "complain on a push" in{
+//    intercept[IllegalStateException]{
+//      fullStack.push(10)
+//    }
+//  }
+//}
 
 class StackSpecTest extends FlatSpec{
   "A Stack" should "pop values in last-in-first-out order" in {
@@ -384,56 +384,56 @@ class ExampleFixtureFlatSpec extends fixture.FlatSpec {
   }
 }
 //Assertions
-class MySpecTest extends UnitSpec{
-  val left = 3
-  val right = 1
-  val attempted = 2
-  //assert(attempted == 1,"Execution was attempted " + left + " times instead of 1 time")
-//  assertResult(1){
-//    left - right
+//class MySpecTest extends UnitSpec{
+//  val left = 3
+//  val right = 1
+//  val attempted = 2
+//  //assert(attempted == 1,"Execution was attempted " + left + " times instead of 1 time")
+////  assertResult(1){
+////    left - right
+////  }
+//
+//  //[Failures]
+//  //fail()
+//
+//  //[Success]
+//  //succeed
+//
+//  //[ExpectedExceptions]
+//  val s = "hi"
+//  try {
+//    s.charAt(-1)
+//    fail()
 //  }
-
-  //[Failures]
-  //fail()
-
-  //[Success]
-  //succeed
-
-  //[ExpectedExceptions]
-  val s = "hi"
-  try {
-    s.charAt(-1)
-    fail()
-  }
-  catch{
-    case _ : IndexOutOfBoundsException => //Expected so does nothing about it
-  }
-
-  withClue("this is a clue"){
-    assertThrows[IndexOutOfBoundsException] {
-      //Result type: IndexOutOfBoundsException
-      "hi".charAt(-1)
-    }
-  }
-
-  val caught = intercept[IndexOutOfBoundsException] {
-    //Result type: IndexOutOfBoundsException
-    s.charAt(-1)
-  }
-  assert(caught.getMessage.indexOf("-1") != -1)
-
-  assertDoesNotCompile("val a:String = 1")
-  assertTypeError("val a:String = 1")
-  assertCompiles("val a: Int=1")
-
-  //Assumptions
-  //assume(database.isAvailable, "Database was down again")
-
-  //[Forcing cancellations]
-  //cancel("Can't run the test because no internet connection was found")
-
-  //[Clues]
- // assert(1+1 ===3, "this is a clue")
-  //assertResult(3,"this is a clue"){1+1}
-
-}
+//  catch{
+//    case _ : IndexOutOfBoundsException => //Expected so does nothing about it
+//  }
+//
+//  withClue("this is a clue"){
+//    assertThrows[IndexOutOfBoundsException] {
+//      //Result type: IndexOutOfBoundsException
+//      "hi".charAt(-1)
+//    }
+//  }
+//
+//  val caught = intercept[IndexOutOfBoundsException] {
+//    //Result type: IndexOutOfBoundsException
+//    s.charAt(-1)
+//  }
+//  assert(caught.getMessage.indexOf("-1") != -1)
+//
+//  assertDoesNotCompile("val a:String = 1")
+//  assertTypeError("val a:String = 1")
+//  assertCompiles("val a: Int=1")
+//
+//  //Assumptions
+//  //assume(database.isAvailable, "Database was down again")
+//
+//  //[Forcing cancellations]
+//  //cancel("Can't run the test because no internet connection was found")
+//
+//  //[Clues]
+// // assert(1+1 ===3, "this is a clue")
+//  //assertResult(3,"this is a clue"){1+1}
+//
+//}
