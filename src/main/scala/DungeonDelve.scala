@@ -2,7 +2,7 @@ class DungeonDelve {
  var overallDead = false
 }
 
-trait TheDoEverything extends Dice with Items {
+trait TheDoEverything extends Dice with Items with Magic {
   var Name: String = " "
   var raece: String = " "
   var Strength: Int = 0
@@ -22,10 +22,11 @@ trait TheDoEverything extends Dice with Items {
     println(s"Inventory ${Character.inventory.inventory}")
     println(s"Weapon: ${Character.inventory.weapon}")
     println(s"Armour: ${Character.inventory.armour}")
+    println(s"Spell Book: ${Character.spellBook.spellBook}")
     print("\n")
   }
 
-  def Combat(characterSheet:Mundane,Spells:List[String]=List(),
+  def Combat(characterSheet:Mundane,
              playerNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]],
              enemyNAS: Tuple3[String, Tuple3[Int, Int, String], Tuple7[Int, Int, Int, Int, Int, Int, Int]]): Boolean = {
     var dead = false
@@ -147,8 +148,44 @@ trait TheDoEverything extends Dice with Items {
 
       }
 
-      def castSpell(Character:Magical)={
-        Character.spellBook.spellBook
+      def castSpell(Character:Mundane)={
+        var spellChoice = " "
+        //RollDice
+        var spellCheck = rollDice((1,20),playerNAS._3._4)
+
+        while(!allSpellKeys.contains(spellChoice)){
+          spellChoice = readLine(createChoiceString(Character.spellBook.spellBook,"Choose a spell From:")).toLowerCase().split(" ").map(_.capitalize).mkString("")
+        }
+        def getDC(spellChoice:String):Int= {
+          spellChoice.substring(0, 1).toLowerCase() match {
+            case "h" => return 0
+            case _ => return damageSpellMap(spellChoice.substring(0,1))(spellChoice)._2._1
+          }
+        }
+        var DC = getDC(spellChoice)
+        def castHealSpell(spellChoice:String)={
+          var heal = rollDice(healingSpellMap(spellChoice),playerNAS._3._4)
+          println(s"You healed yourself for $heal")
+          phealth += heal
+        }
+        def castDamageSpell(spellChoice:String)={
+          var damage = rollDice(damageSpellMap(spellChoice.substring(0,1))(spellChoice)._1,playerNAS._3._4)
+          if (spellCheck >= DC){
+            println(s"You cast $spellChoice for $damage damage")
+            ehealth -= damage
+          }
+          else{
+            println(s"your spell backfires causing you $damage damage")
+            phealth -= damage
+          }
+
+        }
+        if (DC == 0){
+          castHealSpell(spellChoice)
+        }
+        else{
+            castDamageSpell(spellChoice)
+        }
       }
 
       println(s"Enemy HP: $ehealth, Your HP: $phealth")
@@ -216,14 +253,15 @@ class SpellBook extends Magic{
 
 trait Magic{
 
-  var healingSpellMap:Map[String,Tuple2[Int,Int]] = Map("Light"->(1,6),"Moderate"->(2,6),"Critical"->(4,6))
+  var healingSpellMap:Map[String,Tuple2[Int,Int]] = Map("HealingLight"->(1,6),"HealingModerate"->(2,6),"HealingCritical"->(4,6))
   var healSpellKeys = healingSpellMap.keys.toList
   var damageSpellMap:Map[String,Map[String,Tuple2[Tuple2[Int,Int],Tuple2[Int,String]]]]= Map(//(rollDice),(castingDC,effect(or damage type))
-    "Fire"->Map("Burning Hands"->((1,8),(12,"Fire")),"Flame Bolt"->((3,3),(15,"Fire")),"FireBall"->((2,10),(18,"Fire"))),
-    "Water"-> Map("Water Spray"->((1,4),(6,"Water")),"Water Bolt"->((2,4),(10,"Water")),"Ice Lance"->((1,10),(13,"Ice"))))
+    "F"->Map("FlamingHands"->((1,8),(12,"Fire")),"FlameBolt"->((3,3),(15,"Fire")),"Fireball"->((2,10),(18,"Fire"))),
+    "W"-> Map("WaterSpray"->((1,4),(6,"Water")),"WaterBolt"->((2,4),(10,"Water")),"WaterLance"->((1,10),(13,"Water"))))
   var damSpellKeys = damageSpellMap.keys.toList
-  var damSpellFireKeys = damageSpellMap("Fire").keys.toList
-  var damSpellWaterKeys = damageSpellMap("Water").keys.toList
+  var damSpellFireKeys = damageSpellMap("F").keys.toList
+  var damSpellWaterKeys = damageSpellMap("W").keys.toList
+  var allSpellKeys = healSpellKeys ::: damSpellFireKeys ::: damSpellWaterKeys
 }
 trait Dice{
   var randInt = scala.util.Random
@@ -322,6 +360,7 @@ abstract class Mundane extends TheDoEverything{
   var race = Race("Human",(1,6), (1,6), (1,6), (1,6), (1,6), (1,6))
   var bonuses  = (0,0,0,0,0,0)
   Name = ""
+  var spellBook = new SpellBook()
   var inventory = new Inventory()
   var loot:List[String] = List()
   var characterPoints = 5
@@ -388,16 +427,13 @@ abstract class Mundane extends TheDoEverything{
   }
 }
 
-trait Magicaly{
-  var spellbook = new SpellBook()
-}
-class Magical extends Mundane{
-  var spellBook = new SpellBook()
-}
+
 //class MagicalElf extends MundaneElf with Magicaly{
 //  spellbook.spellBook = List("Flame Bolt","Water Bolt")
 //}
-class MagicalElf extends Magical{}
+class MagicalElf extends MundaneElf{
+  spellBook.spellBook = List("Flame Bolt","Water Bolt")
+}
 class MundaneElf extends Mundane{
   race = Race("Elf",(1,6),(1,8),(2,6),(1,8),(1,6),(1,8))
   bonuses =(0,2,6,2,0,0)
@@ -462,7 +498,7 @@ object DungeonDelveGame extends App with TheDoEverything {
     chooseRace.toLowerCase().substring(0,1) match {
       case "h" => new MundaneHuman()
       case "d" => new MundaneDwarf()
-      case "e" => new MundaneElf()
+      case "e" => new MagicalElf()
       case "m" => new MundaneMinotaur()
       case "g" => chooseRace.toLowerCase() match{
         case "goblin" => new MundaneGoblin()
@@ -484,14 +520,15 @@ object DungeonDelveGame extends App with TheDoEverything {
   var Character = createCharacter()
   checkInventory(Character)
 
+  //MonsterList Premade
+  var MonsterList:List[Tuple2[List[String],List[Int]]] = List((List("Goblin"),List(1)),(List("Goblin"),List(3)),(List("Goblin","GoblinThief"),List(4,1)),(List("Minotaur"),List(1)))
   //Create dungeon
   var dungeonThings:Tuple2[Int,List[Tuple2[List[String],List[Int]]]] = (4,MonsterList)
   var dungeonTile = new DungeonTile()
   var theDungeon:List[List[String]] = List()
   var roomEncounter:List[Tuple2[List[String], Tuple2[List[String], List[Int]]]] = List()
 
-  //MonsterList Premade
-  var MonsterList:List[Tuple2[List[String],List[Int]]] = List((List("Goblin"),List(1)),(List("Goblin"),List(3)),(List("Goblin","GoblinThief"),List(4,1)),(List("Minotaur"),List(1)))
+
 
 
   var customize = (readLine("Would you like to create your own dungeon? or randomly generate: [Own,Generate]").toLowerCase()+ " ").substring(0,1)
