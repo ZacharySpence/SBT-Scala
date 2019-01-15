@@ -162,7 +162,7 @@ object mainGame extends App{
 
 
     }
-    while (!deathRun.overallDead){
+    while (!deathRun.overallDead ){
       println(s"\nStats:" +
         s"\nStr= ${Chara.strength}"+
         s"\nAgi=${Chara.agility}"+
@@ -237,7 +237,9 @@ object mainGame extends App{
     }
     println(s"You record for that run was: $currentRecord encounters")
   }
-
+  if (Chara.personalRecord > 10){
+    println("You got A Key")
+  }
 
 }
 
