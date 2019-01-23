@@ -454,6 +454,9 @@ class MundaneDwarf extends Mundane{
   inventory.armour = "PlateMail"
 
 }
+class MagicalDwarf extends MundaneDwarf{
+  spellBook.spellBook = List("Water Spray")
+}
 class MundaneHuman extends Mundane{
   race = Race("Human",(1,6),(1,6),(2,6),(1,6),(1,6),(1,6))
   bonuses = (1,1,6,1,1,1)
@@ -462,11 +465,17 @@ class MundaneHuman extends Mundane{
   //inventory.armour = "PlateMail"
 
 }
+class MagicalHuman extends MundaneHuman{
+  spellBook.spellBook = List("Fireball")
+}
 class MundaneGoblin extends Mundane{
   race = Race("Goblin",(1,3),(1,3),(1,4),(1,1),(1,1),(1,1))
   inventory.weapon = "Club"
   inventory.armour = "None"
   Name = "Goblin"
+}
+class MagicalGoblin extends MundaneGoblin{
+  spellBook.spellBook = List("Flaming Hands")
 }
 class MundaneGoblinThief extends Mundane{
   race = Race("GoblinThief",(1,3),(1,5),(1,3),(1,1),(1,1),(1,1))
@@ -495,33 +504,63 @@ class MundaneMinotaur extends Mundane{
 object DungeonDelveGame extends App with TheDoEverything {
   def createCharacter(): Mundane = {
     var chooseRace = readLine("Pick a Race:[Human,Dwarf,Elf]")
-    var Player = initialiseRace(chooseRace)
+    var Player = initialiseRace(chooseRace, true)
     Player.createCharacterAttributes(true)
     Player.chooseItems()
     return Player
   }
 
-  def initialiseRace(chooseRaces: String): Mundane = {
+  def initialiseRace(chooseRaces: String, player:Boolean = false): Mundane = {
+
+    var chooseMagical = "mu"
+    if (player){
+      chooseMagical = (readLine("Magical or Mundane?").toLowerCase()+ "  ").substring(0,2)
+    }
     var chooseRace = chooseRaces
     if (chooseRace.length == 0){
       chooseRace += " "
     }
-    chooseRace.toLowerCase().substring(0,1) match {
-      case "h" => new MundaneHuman()
-      case "d" => new MundaneDwarf()
-      case "e" => new MagicalElf()
-      case "m" => chooseRace.toLowerCase() match{
-        case "minotaur" => new MundaneMinotaur()
-        case "minitaur" => new MundaneMinitaur()
-      }
-      case "g" => chooseRace.toLowerCase() match{
+
+    var raceList:Map[String,Mundane] = Map()
+    chooseMagical match{
+      case "mu" => raceList = Map("h" -> new MundaneHuman(),"d" -> new MundaneDwarf(), "e" -> new MundaneElf(),"g" -> chooseGoblin(chooseRace), "m" -> chooseMinotaur(chooseRace)).withDefaultValue(new MundaneGoblin())
+      case "ma" => raceList = Map("e" -> new MagicalElf).withDefaultValue(new MundaneGoblin)
+    }
+
+    def chooseGoblin(race:String):Mundane={
+      race.toLowerCase() match{
         case "goblin" => new MundaneGoblin()
         case "goblinthief" => new MundaneGoblinThief()
+        case _ => new MundaneGoblin()
       }
-      case _ =>
-        println("You left  it into the hands of the Demons below.")
-        new MundaneGoblin()
     }
+
+    def chooseMinotaur(race:String):Mundane ={
+      race.toLowerCase() match{
+        case "minitaur" => new MundaneMinitaur()
+        case "minotaur" => new MundaneMinotaur()
+        case _ => new MundaneGoblin()
+      }
+    }
+
+    raceList((chooseRace.toLowerCase()+" ").substring(0,1))
+
+//    chooseRace.toLowerCase().substring(0,1) match {
+//      case "h" => new MundaneHuman()
+//      case "d" => new MundaneDwarf()
+//      case "e" => new MundaneElf()
+//      case "m" => chooseRace.toLowerCase() match{
+//        case "minotaur" => new MundaneMinotaur()
+//        case "minitaur" => new MundaneMinitaur()
+//      }
+//      case "g" => chooseRace.toLowerCase() match{
+//        case "goblin" => new MundaneGoblin()
+//        case "goblinthief" => new MundaneGoblinThief()
+//      }
+//      case _ =>
+//        println("You left  it into the hands of the Demons below.")
+//        new MundaneGoblin()
+//    }
   }
 
   def createEnemy(enemyName: String): Mundane = {
