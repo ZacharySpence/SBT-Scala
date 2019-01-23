@@ -37,7 +37,7 @@ object Bullshevick extends App {
     var cardtype = EnemyHand(rand.nextInt(EnemyHand.length))
     var choice = rand.nextInt(4) + 1
     if (player) {
-      cardtype = readLine("Choose a card")+ " "``````
+      cardtype = readLine("Choose a card")+ " "``````ddd
       println("How many of them?")
       choice = readInt()
     }
